@@ -45,7 +45,14 @@ int main(int argc, char **argv)
             strcat(file_w_path, dent->d_name);
             // printf("%s\n", file_w_path);
             stat(file_w_path, &buf);
-            printf("%10lld  ", buf.st_size);
+            if (buf.st_mode & S_IFDIR)
+            {
+                printf("     <DIR>  ");
+            }
+            else
+            {
+                printf("%10lld  ", buf.st_size);
+            }
             printf("%s\n", dent->d_name);
         };
         // Close directory
