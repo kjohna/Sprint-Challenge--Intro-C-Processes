@@ -5,6 +5,45 @@
 #include <string.h>
 
 /**
+ * print_entries
+ * accepts a pointer to a DIR, string with path to that dir, and an offset string and prints contents of the directory
+ */
+int print_entries(DIR *dir, char *path, char *ofst)
+{
+    // Repeatedly read and print entries
+    struct dirent *dent;
+    struct stat buf;
+    char file_w_path[1024];
+    while ((dent = readdir(dir)) != NULL)
+    {
+        strcpy(file_w_path, path);
+        strcat(file_w_path, dent->d_name);
+        // printf("FWP: %s\n", file_w_path);
+        stat(file_w_path, &buf);
+        if (buf.st_mode & S_IFDIR)
+        {
+            printf("%s    <DIR>  ", ofst);
+            printf("%s\n", dent->d_name);
+            // print contents of directory if we encounter one
+            // only if we're 1 layer deep
+            if (strlen(ofst) == 0)
+            {
+                DIR *dir2 = opendir(file_w_path);
+                strcat(file_w_path, "/");
+                print_entries(dir2, file_w_path, "       ");
+                closedir(dir2);
+            }
+        }
+        else
+        {
+            printf("%s%9lld  ", ofst, buf.st_size);
+            printf("%s\n", dent->d_name);
+        }
+    };
+    return 0;
+}
+
+/**
  * Main
  */
 int main(int argc, char **argv)
@@ -35,26 +74,32 @@ int main(int argc, char **argv)
     if (dir != NULL)
     {
         printf("directory '%s' opened successfully.\n", dir_to_print);
-        // Repeatedly read and print entries
-        struct dirent *dent;
-        struct stat buf;
-        char file_w_path[1024];
-        while ((dent = readdir(dir)) != NULL)
-        {
-            strcpy(file_w_path, dir_to_print);
-            strcat(file_w_path, dent->d_name);
-            // printf("%s\n", file_w_path);
-            stat(file_w_path, &buf);
-            if (buf.st_mode & S_IFDIR)
-            {
-                printf("     <DIR>  ");
-            }
-            else
-            {
-                printf("%10lld  ", buf.st_size);
-            }
-            printf("%s\n", dent->d_name);
-        };
+        // print contents
+        print_entries(dir, dir_to_print, "");
+        // // Repeatedly read and print entries
+        // struct dirent *dent;
+        // struct stat buf;
+        // char file_w_path[1024];
+        // while ((dent = readdir(dir)) != NULL)
+        // {
+        //     strcpy(file_w_path, dir_to_print);
+        //     strcat(file_w_path, dent->d_name);
+        //     // printf("%s\n", file_w_path);
+        //     stat(file_w_path, &buf);
+        //     if (buf.st_mode & S_IFDIR)
+        //     {
+        //         printf("     <DIR>  ");
+        //         // print contents of directory if we encounter one
+        //         dir2 = opendir(file_w_path);
+        //         print_entries(dir2);
+        //         closedir(dir2);
+        //     }
+        //     else
+        //     {
+        //         printf("%10lld  ", buf.st_size);
+        //     }
+        //     printf("%s\n", dent->d_name);
+        // };
         // Close directory
         closedir(dir);
     }
